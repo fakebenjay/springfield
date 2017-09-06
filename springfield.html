@@ -11,9 +11,9 @@
         height: auto;
         padding: 10px;
         background-color: white;
-        -webkit-border-radius: 10px;
-        -moz-border-radius: 10px;
-        border-radius: 10px;
+        -webkit-border-radius: 0px;
+        -moz-border-radius: 0px;
+        border-radius: 0px;
         -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
         -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
         box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
@@ -128,12 +128,22 @@
                 } else if (d.properties['value'] === undefined) {
                   string = `D'oh! There are no Springfields in ${d.properties['name']}`
                 } else {
-                  string = `Woo hoo! There are ${d.properties['value']} Springfields in ${d.properties['name']}`
+                  if (d.properties['name'] === "District of Columbia") {
+                    string = `Woo hoo!
+                              There are ${d.properties['value']}
+                              Springfields in Washington DC`
+                  } else {
+                    string = `Woo hoo!
+                              There are ${d.properties['value']}
+                              Springfields in ${d.properties['name']}`
+                  }
                 }
 
+                var coordinates = [d3.event.clientX, d3.event.clientY]
+
                 d3.select("#tooltip")
-                  .style("left", 100 + "px")
-                  .style("top", 100 + "px")
+                  .style("left", coordinates[0] + "px")
+                  .style("top", coordinates[1] + "px")
                   .select("#text")
                   .text(string)
 
