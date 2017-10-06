@@ -3,8 +3,14 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Springfields per State</title>
+		<link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
 		<script src="https://d3js.org/d3.v4.min.js"></script>
 		<style type="text/css">
+
+      @font-face {
+				font-family: 'Muli', sans-serif;
+      }
+
       #tooltip {
         position: absolute;
         width: 200px;
@@ -18,7 +24,8 @@
         -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
         box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
         pointer-events: none;
-        }
+				font-family: simpsons;
+      }
 
       #tooltip.hidden {
         display: none;
@@ -118,7 +125,7 @@
 						   		return color(value);
 					   		} else {
 					   			//If value is undefined…
-						   		return "#ccc";
+						   		return "rgb(248,248,248)";
 					   		}
 					   })
              .on("mouseover", (d) => {

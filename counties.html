@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Springfields per State</title>
+		<link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<style type="text/css">
+
+			@font-face {
+				font-family: 'Muli', sans-serif;
+			}
+
+      #tooltip {
+        position: absolute;
+        width: 200px;
+        height: auto;
+        padding: 10px;
+        background-color: white;
+        -webkit-border-radius: 0px;
+        -moz-border-radius: 0px;
+        border-radius: 0px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+				font-family: simpsons;
+      }
+
+      #tooltip.hidden {
+        display: none;
+      }
+
+      #tooltip p {
+        margin: 0;
+        font-family: sans-serif;
+        font-size: 16px;
+        line-height: 20px;
+      }
+		</style>
+	</head>
+	<body>
+    <div id="tooltip" class="hidden">
+			<p><strong id="text"></strong></p>
+		</div>
+		<script type="text/javascript">
+
+			//Width and height
+			var w = 1000;
+			var h = 600;
+
+			//Define map projection
+			var projection = d3.geoAlbersUsa()
+							   .translate([w/2, h/2])
+							   .scale([1000]);
+
+			//Define path generator
+			var path = d3.geoPath()
+							 .projection(projection);
+
+      //Define quantize scale to sort data values into buckets of color
+      var color = d3.scaleQuantize()
+         				.range(["rgb(248,243,223)","rgb(248,238,199)","rgb(248,233,174)","rgb(248,228,149)","rgb(248,223,124)","rgb(248,219,99)","rgb(248,214,74)","rgb(248,209,50)","rgb(248,204,25)","rgb(248,199,0)"]);
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+      //Load in raw Springfield data
+			d3.csv("springfield.csv", (data) => {
+
+        //Tabulate number of Springfields per state
+        var condensedData = {}
+
+        for (var i = 0; i < data.length; i++) {
+          if (condensedData[data[i].state]) {
+            condensedData[data[i].state] += 1
+          } else {
+            condensedData[data[i].state] = 1
+          }
+        }
+
+        //Set domain
+        color.domain([
+          d3.min(Object.values(condensedData), function(d) { return d; }),
+          d3.max(Object.values(condensedData), function(d) { return d; })
+        ]);
+
+				d3.json("https://d3js.org/us-10m.v1.json", function(json) {
+          for (var i = 0; i < Object.keys(condensedData).length; i++) {
+            var dataState = Object.keys(condensedData)[i]
+            var dataValue = parseFloat(condensedData[dataState]);
+
+						//Find the corresponding state inside the GeoJSON
+						for (var j = 0; j < json.features[0].length; j++) {
+
+							var jsonState = json.features[j].properties.name;
+
+							if (dataState == jsonState) {
+
+								//Copy the data value into the JSON
+								json.features[j].properties.value = dataValue;
+
+								//Stop looking through the JSON
+								break;
+
+							}
+						}
+          }
+
+					//Bind data and create one path per GeoJSON feature
+					svg.selectAll("path")
+					   .data(json.features)
+					   .enter()
+					   .append("path")
+					   .attr("d", path)
+					   .style("fill", function(d) {
+					   		//Get data value
+					   		var value = d.properties.value;
+
+					   		if (value) {
+					   			//If value exists…
+						   		return color(value);
+					   		} else {
+					   			//If value is undefined…
+						   		return "#ccc";
+					   		}
+					   })
+             .on("mouseover", (d) => {
+                var string
+                if (d.properties['value'] === 1) {
+                  string = `Hell yeah! There is ${d.properties['value']} Springfield in ${d.properties['name']}`
+                } else if (d.properties['value'] === undefined) {
+                  string = `D'oh! There are no Springfields in ${d.properties['name']}`
+                } else {
+                  if (d.properties['name'] === "District of Columbia") {
+                    string = `Woo hoo!
+                              There are ${d.properties['value']}
+                              Springfields in Washington DC`
+                  } else {
+                    string = `Woo hoo!
+                              There are ${d.properties['value']}
+                              Springfields in ${d.properties['name']}`
+                  }
+                }
+
+                var coordinates = [d3.event.clientX, d3.event.clientY]
+
+                d3.select("#tooltip")
+                  .style("left", coordinates[0] + "px")
+                  .style("top", coordinates[1] + "px")
+                  .select("#text")
+                  .text(string)
+
+                //Show the tooltip
+                d3.select("#tooltip").classed("hidden", false);
+             })
+             .on("mouseout", (d) => {
+                d3.select("#tooltip").classed("hidden", true);
+             })
+				});
+      })
+		</script>
+	</body>
+</html>
